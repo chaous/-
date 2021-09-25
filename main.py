@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 from aiortc.contrib.media import MediaPlayer
+from gtts import gTTS
+from playsound import playsound
 
 # Speech synthesis
 import pyttsx3
@@ -27,7 +29,7 @@ from streamlit_webrtc import (
 )
 
 # NOTE: This is testing pseudo-DB, proper implementation requires *SQL
-# NOTE: To log in, type username 'bob' and password 'strawberry'  
+# NOTE: To log in, type username 'bob' and password 'strawberry'
 USERS = {'bob': hash('strawberry')}
 
 USE_PSEUDO_AUTH = False
@@ -258,7 +260,7 @@ def object_detection():
     # NOTE: Put annotations in a UI table as well
     if webrtc_ctx.state.playing:
         tts = pyttsx3.init()
-        tts.setProperty('rate', 200)
+        tts.setProperty('rate', 125)
         # NOTE: Create empty UI object
         labels = st.empty()
         # NOTE: The video transformation with object detection and
@@ -267,6 +269,9 @@ def object_detection():
         # Then the rendered video frames and the labels displayed here
         # are not strictly synchronized.
         tts.startLoop(False)
+        #tts.runAndWait()
+        #tts.say("hi")
+        #tts.SetProperty('volume',0.9)
         #if int(time.time()) % 10000000 == 3:
         while True:
             if webrtc_ctx.video_processor:
@@ -274,11 +279,18 @@ def object_detection():
                 try:
                     tts.iterate()
                     result = webrtc_ctx.video_processor.result_queue.get(timeout=1.0)
-                    for name, prob in result:
-                        # TODO: Fix audio.
-                        # TODO: Possibly move audio processing on to another thread
-                        # TODO: Fix rate issues
-                        tts.say(name)
+                    if int(time.time()) % 10 == 0:
+                        for name, prob in result:
+                            # TODO: Fix audio.
+                            # TODO: Possibly move audio processing on to another thread
+                            # TODO: Fix rate issues
+                            text_en = name
+                            ta_tts = gTTS(text_en, lang='en')
+                            ta_tts.save('trans.mp3')
+                            #audio_file = open('trans.mp3', 'rb')
+                            #audio_bytes = audio_file.read()
+                            #st.audio(audio_bytes, format='audio / og', start_time = 0)
+                            playsound("trans.mp3")
                 except queue.Empty:
                     result = None
                 # NOTE: Build a table
