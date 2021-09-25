@@ -1,0 +1,8 @@
+aiortc==1.2.1
+pyttsx3==2.90
+streamlit==0.89.0
+av==8.0.3
+matplotlib==3.4.3
+numpy==1.21.2
+opencv_python==4.5.3.56
+streamlit_webrtc==0.29.1
