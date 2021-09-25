@@ -3,6 +3,7 @@ import logging
 import queue
 import threading
 import urllib.request
+import time
 from pathlib import Path
 from typing import List, NamedTuple, Literal
 
@@ -88,30 +89,29 @@ def main():
     if 'login' not in st.session_state:
         st.session_state['login'] = False
 
-    if USE_PSEUDO_AUTH == True:
-        if st.session_state['login'] == False:
-            username_field = st.empty()
-            username = username_field.text_input('Username: ', value='')
+    if st.session_state['login'] == False and USE_PSEUDO_AUTH == True:
+        username_field = st.empty()
+        username = username_field.text_input('Username: ', value='')
 
-            password_field = st.empty()
-            password = password_field.text_input('Password: ', value='', type='password')
+        password_field = st.empty()
+        password = password_field.text_input('Password: ', value='', type='password')
 
-            if st.button('Login'):
-                if username != '' and password != '':
-                    if username in USERS and USERS[username] == hash(password):
-                        st.session_state['login'] = True
-                        username_field.empty()
-                        password_field.empty()
-                    else:
-                        st.warning('Either username or password is incorrect')
-                        st.stop()
+        if st.button('Login'):
+            if username != '' and password != '':
+                if username in USERS and USERS[username] == hash(password):
+                    st.session_state['login'] = True
+                    username_field.empty()
+                    password_field.empty()
                 else:
-                    st.warning('Username and password must be entered')
+                    st.warning('Either username or password is incorrect')
                     st.stop()
-
-            if st.button('Register'):
-                st.warning('TBD. Just you wait!')
+            else:
+                st.warning('Username and password must be entered')
                 st.stop()
+
+        if st.button('Register'):
+            st.warning('TBD. Just you wait!')
+            st.stop()
 
     if st.session_state['login'] == True or USE_PSEUDO_AUTH == False:
         object_detection()
@@ -258,6 +258,7 @@ def object_detection():
     # NOTE: Put annotations in a UI table as well
     if webrtc_ctx.state.playing:
         tts = pyttsx3.init()
+        tts.setProperty('rate', 200)
         # NOTE: Create empty UI object
         labels = st.empty()
         # NOTE: The video transformation with object detection and
@@ -266,18 +267,25 @@ def object_detection():
         # Then the rendered video frames and the labels displayed here
         # are not strictly synchronized.
         tts.startLoop(False)
+        #if int(time.time()) % 10000000 == 3:
         while True:
             if webrtc_ctx.video_processor:
                 # NOTE: Receive results periodically
                 try:
                     tts.iterate()
                     result = webrtc_ctx.video_processor.result_queue.get(timeout=1.0)
+                    for name, prob in result:
+                        # TODO: Fix audio.
+                        # TODO: Possibly move audio processing on to another thread
+                        # TODO: Fix rate issues
+                        tts.say(name)
                 except queue.Empty:
                     result = None
                 # NOTE: Build a table
                 labels.table(result)
             else:
                 break
+
         tts.endLoop()
 
 
