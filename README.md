@@ -1,4 +1,4 @@
 # 
-1)install python 3.9
+1)install python 3.7.6
 2)in comand line (anaconda better) pip install requirements.txt
-3) streamlit run main.py
+3) python main.py
