@@ -19,13 +19,30 @@ from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
 import time
-from functools import partial
 from kivy.uix.camera import Camera
+import os
+from imageai.Classification import ImageClassification
+import pyttsx3
+engine = pyttsx3.init()
 
-camera = Camera(play=True, resolution=(240, 240), index=0)
+
+execution_path = os.getcwd()
+prediction = ImageClassification()
+prediction.setModelTypeAsMobileNetV2()
+prediction.setModelPath(os.path.join(execution_path, "mobilenet_v2.h5"))
+prediction.loadModel()
+
+camera = Camera(play=True, resolution=(224, 224), index=0)
+
 def my_callback(dt):
     camera.export_to_png('env.png')
-    #print(3)
+    predictions, probabilities = prediction.classifyImage(os.path.join(execution_path, "env.png"), result_count=10)
+    for eachPrediction, eachProbability in zip(predictions, probabilities):
+        print(eachPrediction, " : ", eachProbability)
+        if eachProbability > 45:
+            engine.say(eachPrediction)
+            engine.runAndWait()
+
 
 Builder.load_string('''
 <CameraClick>:
@@ -74,6 +91,7 @@ class TestCamera(App):
 
 
 def run():
+    time.sleep(5)
     TestCamera().run()
 
 
